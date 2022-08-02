@@ -1,31 +1,33 @@
 Rails.application.routes.draw do
-  namespace :admin do
-    get 'groups/index'
-    get 'groups/show'
-    get 'posts/show'
-    get 'posts/index'
-    get 'homes/top'
-  end
-  namespace :public do
-    get 'groups/new'
-    get 'groups/index'
-    get 'groups/edit'
-    get 'groups/show'
-    get 'posts/new'
-    get 'posts/index'
-    get 'posts/show'
-    get 'posts/edit'
-    get 'users/show'
-    get 'users/edit'
-    get 'users/index'
-  end
+
   devise_for :admin,skip: [:registrations, :passwords], controllers: {
-  sessions: "admin/sessions"
-}
+    sessions: "admin/sessions"
+  }
+
+  namespace :admin do
+    get 'top' => 'homes#top', as: 'top'
+    resources :users, only: [:show, :edit, :update, :index]
+    resources :posts, only: [:show, :index, :destroy] do
+      resources :post_comments, only: [:destroy, :index]
+    end
+    resources :groups, only: [:index, :destroy, :show]
+  end
+
   devise_for :users,skip: [:passwords], controllers: {
-  registrations: "public/registrations",
-  sessions: 'public/sessions'
-}
+    registrations: "public/registrations",
+    sessions: 'public/sessions'
+  }
+
+  scope module: :public do
+    root 'homes#top'
+
+    resources :users, only: [:show, :edit, :update, :index]
+    resources :posts do
+      resources :post_comments, only: [:create, :destroy]
+      resource :favorites, only: [:create, :destroy]
+    end
+    resources :groups
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Defines the root path route ("/")
